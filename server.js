@@ -3,8 +3,6 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const cors = require('cors');
-const QRCode = require('qrcode');
-const multer = require('multer');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -20,37 +18,6 @@ const ordersDir = path.join(__dirname, 'orders');
 if (!fs.existsSync(ordersDir)) {
     fs.mkdirSync(ordersDir, { recursive: true });
 }
-
-// ===== 이미지 업로드 설정 (multer) =====
-const imagesDir = path.join(__dirname, 'public', 'images');
-if (!fs.existsSync(imagesDir)) {
-    fs.mkdirSync(imagesDir, { recursive: true });
-}
-
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, imagesDir);
-    },
-    filename: function (req, file, cb) {
-        const timestamp = Date.now();
-        const originalName = file.originalname.split('.')[0];
-        const ext = path.extname(file.originalname);
-        const filename = `menu_${timestamp}_${originalName}${ext}`;
-        cb(null, filename);
-    }
-});
-
-const upload = multer({
-    storage: storage,
-    limits: { fileSize: 10 * 1024 * 1024 },
-    fileFilter: function (req, file, cb) {
-        if (file.mimetype.startsWith('image/')) {
-            cb(null, true);
-        } else {
-            cb(new Error('이미지 파일만 업로드 가능합니다.'));
-        }
-    }
-});
 
 // 메뉴 데이터 - 금별맥주 완전 메뉴판
 const menus = [
@@ -645,7 +612,8 @@ app.get('/api/access-info', (req, res) => {
     res.json({
         port: PORT,
         lanIp,
-        lanUrl: lanIp ? `http://${lanIp}:${PORT}` : null,
+        lanUrl: lanIp ? `http://${lanIp}:${PORT}/?table=테이블번호` : null,
+        onlineUrl: 'https://andone-order.com/?table=테이블번호',
         browserOrigin: `${req.protocol}://${req.get('host')}`
     });
 });
@@ -790,103 +758,10 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// ===== 이미지 업로드 API =====
-app.post('/api/upload-image', upload.single('image'), (req, res) => {
-    try {
-        if (!req.file) {
-            return res.status(400).json({
-                success: false,
-                message: '파일이 선택되지 않았습니다.'
-            });
-        }
-
-        const imageUrl = `/images/${req.file.filename}`;
-        console.log(`✅ 이미지 업로드: ${req.file.filename}`);
-
-        res.json({
-            success: true,
-            filename: req.file.filename,
-            url: imageUrl,
-            originalName: req.file.originalname,
-            size: req.file.size
-        });
-    } catch (error) {
-        console.error('이미지 업로드 오류:', error);
-        res.status(500).json({
-            success: false,
-            message: '이미지 업로드에 실패했습니다.',
-            error: error.message
-        });
-    }
-});
-
-// 이미지 목록 조회
-app.get('/api/images', (req, res) => {
-    try {
-        if (!fs.existsSync(imagesDir)) {
-            return res.json({ success: true, images: [], count: 0 });
-        }
-
-        const files = fs.readdirSync(imagesDir);
-        const images = files
-            .filter(file => /\.(jpg|jpeg|png|gif|webp)$/i.test(file))
-            .map(file => ({
-                filename: file,
-                url: `/images/${file}`,
-                uploadTime: fs.statSync(path.join(imagesDir, file)).mtime
-            }))
-            .sort((a, b) => b.uploadTime - a.uploadTime);
-
-        res.json({
-            success: true,
-            images: images,
-            count: images.length
-        });
-    } catch (error) {
-        console.error('이미지 목록 조회 오류:', error);
-        res.status(500).json({
-            success: false,
-            message: '이미지 목록 조회에 실패했습니다.',
-            error: error.message
-        });
-    }
-});
-
-// 이미지 삭제
-app.delete('/api/images/:filename', (req, res) => {
-    try {
-        const filename = req.params.filename;
-        const filePath = path.join(imagesDir, filename);
-
-        if (!filePath.startsWith(imagesDir)) {
-            return res.status(403).json({ error: 'Access denied' });
-        }
-
-        if (!fs.existsSync(filePath)) {
-            return res.status(404).json({ error: '파일을 찾을 수 없습니다.' });
-        }
-
-        fs.unlinkSync(filePath);
-        console.log(`✅ 이미지 삭제: ${filename}`);
-
-        res.json({
-            success: true,
-            message: '이미지가 삭제되었습니다.'
-        });
-    } catch (error) {
-        console.error('이미지 삭제 오류:', error);
-        res.status(500).json({
-            success: false,
-            message: '이미지 삭제에 실패했습니다.',
-            error: error.message
-        });
-    }
-});
-
 // 서버 시작
 app.listen(PORT, () => {
     console.log(`\n🚀 금별맥주 QR 주문 시스템 시작됨!`);
-    console.log(`📱 브라우저에서 열기: http://localhost:${PORT}`);
-    console.log(`\n또는 외부에서 접속:`);
-    console.log(`http://192.168.0.5:${PORT}\n`);
+    console.log(`📱 고객 접속 주소: https://andone-order.com/?table=테이블번호`);
+    console.log(`\n또는 로컬 WiFi: http://192.168.0.5:${PORT}/?table=테이블번호`);
+    console.log(`또는 로컬호스트: http://localhost:${PORT}/?table=테이블번호\n`);
 });
