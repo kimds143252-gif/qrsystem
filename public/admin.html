@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>금별맥주 - 관리자 대시보드</title>
+    <link rel="stylesheet" href="admin-style.css">
+</head>
+<body>
+    <div class="admin-container">
+        <header class="admin-header">
+            <h1>🍺 금별맥주 관리자 대시보드</h1>
+            <div class="header-info">
+                <span>👤 관리자</span>
+                <button onclick="logout()" class="logout-btn">로그아웃</button>
+            </div>
+        </header>
+
+        <div class="admin-content">
+            <!-- 사이드바 -->
+            <aside class="admin-sidebar">
+                <nav class="admin-nav">
+                    <button class="nav-item active" onclick="switchTab('menus', this)">📋 메뉴 관리</button>
+                    <button class="nav-item" onclick="switchTab('categories', this)">🏷️ 카테고리</button>
+                    <button class="nav-item" onclick="switchTab('design', this)">🎨 디자인</button>
+                    <button class="nav-item" onclick="switchTab('orders', this)">📊 주문 내역</button>
+                    <button class="nav-item" onclick="switchTab('qrcodes', this)">📱 테이블 QR</button>
+                    <button class="nav-item" onclick="switchTab('settings', this)">⚙️ 설정</button>
+                </nav>
+            </aside>
+
+            <!-- 메인 콘텐츠 -->
+            <main class="admin-main">
+                <!-- 메뉴 관리 탭 -->
+                <div id="menus" class="tab-content active">
+                    <h2>📋 메뉴 관리</h2>
+                    
+                    <div class="add-menu-section">
+                        <h3>새 메뉴 추가</h3>
+                        <div class="form-group">
+                            <input type="text" id="newMenuName" placeholder="메뉴명" class="form-input">
+                            <input type="number" id="newMenuPrice" placeholder="가격" class="form-input">
+                            <select id="newMenuCategory" class="form-select"></select>
+                            <button onclick="addMenu()" class="btn-primary">추가하기</button>
+                        </div>
+                    </div>
+
+                    <div class="menus-list">
+                        <h3>전체 메뉴 (클릭하여 수정)</h3>
+                        <div id="menusList"></div>
+                    </div>
+                </div>
+
+                <!-- 카테고리 관리 탭 -->
+                <div id="categories" class="tab-content">
+                    <h2>🏷️ 카테고리 관리</h2>
+                    <p style="margin-bottom:15px;color:#666;">카테고리 오타를 수정하면 해당 카테고리를 사용하는 모든 메뉴에 한 번에 반영됩니다.</p>
+                    <div id="categoriesList" class="categories-list"></div>
+                    <div class="category-add-row">
+                        <input type="text" id="newCategoryName" placeholder="새 카테고리 이름" class="form-input">
+                        <button onclick="addCategory()" class="btn-primary">추가</button>
+                    </div>
+                </div>
+
+                <!-- 디자인 탭 -->
+                <div id="design" class="tab-content">
+                    <h2>🎨 디자인 설정</h2>
+                    
+                    <div class="design-section">
+                        <div class="design-item">
+                            <label>주요 색상 (헤더)</label>
+                            <input type="color" id="headerColor" value="#d32f2f" onchange="updateDesign()">
+                        </div>
+
+                        <div class="design-item">
+                            <label>보조 색상</label>
+                            <input type="color" id="accentColor" value="#ff6f00" onchange="updateDesign()">
+                        </div>
+
+                        <div class="design-item">
+                            <label>텍스트 색상</label>
+                            <input type="color" id="textColor" value="#333" onchange="updateDesign()">
+                        </div>
+
+                        <div class="design-item">
+                            <label>배경 색상</label>
+                            <input type="color" id="bgColor" value="#f5f5f5" onchange="updateDesign()">
+                        </div>
+
+                        <div class="design-item">
+                            <label>헤더 텍스트</label>
+                            <input type="text" id="headerText" value="🍺 금별맥주" class="form-input" onchange="updateDesign()">
+                        </div>
+
+                        <div class="design-item">
+                            <label>서브텍스트</label>
+                            <input type="text" id="subText" value="야장 QR 주문 시스템" class="form-input" onchange="updateDesign()">
+                        </div>
+
+                        <button onclick="resetDesign()" class="btn-secondary">기본값으로 복원</button>
+                    </div>
+
+                    <div class="preview-section">
+                        <h3>미리보기</h3>
+                        <div id="previewHeader" class="preview-header">
+                            <h1 id="previewTitle">🍺 금별맥주</h1>
+                            <p id="previewSubtitle">야장 QR 주문 시스템</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 주문 내역 탭 -->
+                <div id="orders" class="tab-content">
+                    <h2>📊 주문 내역</h2>
+                    <div id="ordersList" class="orders-list"></div>
+                </div>
+
+                <!-- 테이블 QR 탭 -->
+                <div id="qrcodes" class="tab-content">
+                    <h2>📱 테이블 QR 코드</h2>
+                    <p style="margin-bottom:15px;color:#666;">현재 접속 주소를 기준으로 1번~100번 테이블 전용 QR을 생성합니다. 고객이 QR을 찍으면 테이블 번호가 자동으로 인식됩니다.</p>
+                    <div class="qr-toolbar">
+                        <button onclick="generateAllQRCodes()" class="btn-primary">🔄 QR 1~100 생성</button>
+                        <button onclick="printAllQRCodes()" class="btn-secondary">🖨️ 1~100 전체 인쇄</button>
+                    </div>
+                    <div id="qrBaseUrl" class="qr-base-url"></div>
+                    <div id="qrGrid" class="qr-grid"></div>
+                </div>
+
+                <!-- 설정 탭 -->
+                <div id="settings" class="tab-content">
+                    <h2>⚙️ 설정</h2>
+                    
+                    <div class="settings-item">
+                        <h3>관리자 비번 변경</h3>
+                        <input type="password" id="newPassword" placeholder="새 비번" class="form-input">
+                        <button onclick="changePassword()" class="btn-primary">변경</button>
+                    </div>
+
+                    <div class="settings-item">
+                        <h3>백업 및 복원</h3>
+                        <button onclick="backupData()" class="btn-secondary">데이터 백업</button>
+                        <button onclick="document.getElementById('fileInput').click()" class="btn-secondary">데이터 복원</button>
+                        <input type="file" id="fileInput" style="display:none" accept=".json" onchange="restoreData(event)">
+                    </div>
+
+                    <div class="settings-item">
+                        <h3>초기화</h3>
+                        <button onclick="resetAllData()" class="btn-danger">모든 데이터 초기화</button>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- 메뉴 수정 모달 -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2>메뉴 수정</h2>
+            
+            <div class="form-group" style="flex-direction: column;">
+                <label>메뉴명</label>
+                <input type="text" id="editMenuName" class="form-input">
+            </div>
+
+            <div class="form-group" style="flex-direction: column;">
+                <label>가격</label>
+                <input type="number" id="editMenuPrice" class="form-input">
+            </div>
+
+            <div class="form-group" style="flex-direction: column;">
+                <label>카테고리</label>
+                <select id="editMenuCategory" class="form-select"></select>
+            </div>
+
+            <div class="form-group" style="flex-direction: column;">
+                <label>메뉴 이미지 (선택사항)</label>
+                <input type="file" id="editMenuImage" accept="image/*" class="form-input" onchange="previewImage(event)">
+                <div id="imagePreview" class="image-preview"></div>
+            </div>
+
+            <div style="border: 1px solid #ddd; padding: 10px; border-radius: 8px; margin: 10px 0;">
+                <label style="display: block; margin-bottom: 8px; font-weight: bold; font-size: 14px;">메뉴 상태</label>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 13px;">
+                        <input type="checkbox" id="editMenuRecommended" style="width: 16px; height: 16px;"> 
+                        <span>⭐ 추천</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 13px;">
+                        <input type="checkbox" id="editMenuPopular" style="width: 16px; height: 16px;"> 
+                        <span>🔥 인기</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 13px;">
+                        <input type="checkbox" id="editMenuNew" style="width: 16px; height: 16px;"> 
+                        <span>✨ new</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 13px;">
+                        <input type="checkbox" id="editMenuSoldOut" style="width: 16px; height: 16px;"> 
+                        <span>🚫 품절</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="modal-buttons">
+                <button onclick="saveMenuEdit()" class="btn-primary">저장</button>
+                <button onclick="deleteCurrentMenu()" class="btn-danger">삭제</button>
+                <button onclick="closeModal()" class="btn-secondary">취소</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="admin.js"></script>
+</body>
+</html>

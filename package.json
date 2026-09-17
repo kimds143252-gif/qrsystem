@@ -1,0 +1,24 @@
+{
+  "name": "geumbyeol-qr-order-system",
+  "version": "1.0.0",
+  "description": "금별맥주 야장 QR 주문 시스템",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": [
+    "qr",
+    "order",
+    "restaurant",
+    "printer"
+  ],
+  "author": "당신의 이름",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "multer": "^2.4.0",
+    "qrcode": "^1.5.4"
+  }
+}

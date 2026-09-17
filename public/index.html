@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#111111">
+  <title>금별맥주 주문</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand-wrap">
+      <div class="brand-star">★</div>
+      <div>
+        <div class="brand-title" id="brandTitle">금별맥주</div>
+        <div class="brand-sub" id="brandSub">김포걸포점</div>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="icon-btn" onclick="showCart()" aria-label="장바구니">🛒<span id="cartBadge" class="cart-badge">0</span></button>
+      <button class="icon-btn" onclick="showMenu()" aria-label="메뉴">☰</button>
+    </div>
+  </header>
+
+  <main id="app" class="app-main">
+    <section id="homeView" class="view active">
+      <div class="table-strip">
+        <span>테이블</span><strong id="tableDisplay">-</strong>
+        <span id="tableStatus" class="table-status">QR 테이블</span>
+      </div>
+
+      <div class="hero">
+        <div class="hero-copy">
+          <span>좋은 사람들과 맛있는 시간</span>
+          <strong>금별맥주</strong>
+          <small>김포걸포점</small>
+        </div>
+      </div>
+
+      <div class="category-scroll" id="categoryScroll"></div>
+
+      <section class="recommend-section">
+        <div class="section-title"><h2>👍 추천메뉴</h2><button onclick="showCategory('전체')">더보기 ›</button></div>
+        <div class="recommend-grid" id="recommendGrid"></div>
+      </section>
+    </section>
+
+    <section id="categoryView" class="view">
+      <div class="page-head"><button onclick="showHome()">‹</button><h1 id="categoryTitle">메뉴</h1></div>
+      <div class="sub-category-scroll" id="subCategoryScroll"></div>
+      <div class="menu-list" id="menuList"></div>
+    </section>
+
+    <section id="detailView" class="view detail-view">
+      <div id="detailContent"></div>
+    </section>
+
+    <section id="cartView" class="view">
+      <div class="page-head"><button onclick="showHome()">‹</button><h1>장바구니</h1><button class="text-btn" onclick="clearCart()">전체삭제</button></div>
+      <div id="cartContent"></div>
+    </section>
+
+    <section id="checkoutView" class="view">
+      <div class="page-head"><button onclick="showCart()">‹</button><h1>주문 확인</h1></div>
+      <div class="stepper"><b>1 주문서 작성</b><span>2 주문 접수</span><span>3 완료</span></div>
+      <div class="checkout-card">
+        <h2>주문자 정보</h2>
+        <label>테이블 번호</label>
+        <div class="table-number" id="checkoutTable">-</div>
+        <h2>주문 메뉴 확인</h2>
+        <div id="checkoutItems"></div>
+        <div class="checkout-total"><span>주문 금액</span><strong id="checkoutTotal">₩0</strong></div>
+        <button class="primary-btn large" id="submitOrderBtn" onclick="submitOrder()">주문 넣기 <span>›</span></button>
+        <p class="notice">주문을 누르면 매장 주문으로 바로 접수됩니다.</p>
+      </div>
+    </section>
+
+    <section id="successView" class="view success-view">
+      <div class="success-card">
+        <div class="success-icon">✓</div>
+        <h1>주문이 완료되었습니다!</h1>
+        <p>맛있는 음식이 곧 준비됩니다.</p>
+        <div class="order-info">
+          <div><span>주문번호</span><strong id="successOrderId">-</strong></div>
+          <div><span>테이블 번호</span><strong id="successTable">-</strong></div>
+          <div><span>주문금액</span><strong id="successTotal">₩0</strong></div>
+        </div>
+        <button class="secondary-btn" onclick="showHome()">메뉴 더 보기</button>
+        <button class="primary-btn" onclick="showCart()">주문내역 보기</button>
+      </div>
+    </section>
+  </main>
+
+  <nav class="bottom-nav">
+    <button id="navHome" class="active" onclick="showHome()"><span>⌂</span><b>홈</b></button>
+    <button id="navMenu" onclick="showCategory('전체')"><span>☷</span><b>메뉴</b></button>
+    <button id="navCart" onclick="showCart()"><span>🛒</span><b>장바구니</b><i id="navCartBadge">0</i></button>
+    <button onclick="showOrders()"><span>▣</span><b>주문내역</b></button>
+  </nav>
+
+  <div id="toast" class="toast"></div>
+  <div id="modal" class="modal" onclick="if(event.target===this)closeModal()"><div id="modalBody" class="modal-body"></div></div>
+  <script src="script.js"></script>
+</body>
+</html>
