@@ -624,13 +624,14 @@ async function generateAllQRCodes() {
     const grid = document.getElementById('qrGrid');
     const baseEl = document.getElementById('qrBaseUrl');
     if (!grid) return;
-    await loadCustomerAccessUrl();
-    const baseUrl = getCustomerBaseUrl();
+    
+    // andone-order.com 도메인 직접 사용 (최우선)
+    const baseUrl = 'https://andone-order.com';
     baseEl.textContent = `고객 접속 주소: ${baseUrl}/?table=테이블번호`;
     grid.innerHTML = '';
 
     for (let table = 1; table <= 100; table++) {
-        const url = tableQrUrl(table);
+        const url = `${baseUrl}/?table=${table}`;
         const card = document.createElement('div');
         card.className = 'qr-card';
         card.innerHTML = `<h3>${table}번 테이블</h3><div class="qr-image" id="qr-${table}"></div><div class="qr-url">${escapeHtml(url)}</div><button class="btn-secondary" onclick="printSingleQRCode(${table})">🖨️ 이 QR 인쇄</button>`;
@@ -645,8 +646,8 @@ async function printAllQRCodes() {
 }
 
 async function printSingleQRCode(tableNumber) {
-    await loadCustomerAccessUrl();
-    const url = tableQrUrl(tableNumber);
+    // andone-order.com 도메인 직접 사용
+    const url = `https://andone-order.com/?table=${tableNumber}`;
     const qr = document.createElement('div');
     qr.id = 'singleQrPrint';
     qr.style.position = 'fixed'; qr.style.left = '-10000px'; qr.style.top = '0'; qr.style.background = '#fff'; qr.style.padding = '30px'; qr.style.textAlign = 'center';
