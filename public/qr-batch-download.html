@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR 코드 1-100 일괄 다운로드</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode.js/1.5.3/qrcode.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 15px;
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            text-align: center;
+            color: #d32f2f;
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            margin-bottom: 25px;
+            border-radius: 5px;
+            font-size: 13px;
+            color: #1565c0;
+            line-height: 1.6;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            flex-direction: column;
+        }
+
+        button {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: bold;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #d32f2f, #b71c1c);
+            color: white;
+            width: 100%;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(211,47,47,0.3);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .progress-section {
+            margin-bottom: 25px;
+            display: none;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 40px;
+            background: #e0e0e0;
+            border-radius: 20px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #d32f2f, #ff6f00);
+            width: 0%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 13px;
+            transition: width 0.3s;
+        }
+
+        .progress-text {
+            text-align: center;
+            color: #666;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        .status {
+            text-align: center;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: bold;
+            display: none;
+        }
+
+        .status.loading {
+            background: #e3f2fd;
+            color: #1565c0;
+            display: block;
+        }
+
+        .status.success {
+            background: #c8e6c9;
+            color: #2e7d32;
+            display: block;
+        }
+
+        .status.error {
+            background: #ffcccc;
+            color: #c62828;
+            display: block;
+        }
+
+        .file-list {
+            background: #f5f5f5;
+            border-radius: 8px;
+            padding: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .file-list h3 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .file-item {
+            padding: 8px 12px;
+            background: white;
+            margin-bottom: 5px;
+            border-radius: 4px;
+            border-left: 3px solid #d32f2f;
+            font-size: 12px;
+            color: #666;
+            font-family: 'Courier New', monospace;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .stat-item {
+            background: #f9f9f9;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #d32f2f;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .features {
+            background: #fff3e0;
+            border-left: 4px solid #ff6f00;
+            padding: 15px;
+            border-radius: 5px;
+            font-size: 13px;
+            color: #e65100;
+            line-height: 1.8;
+            margin-bottom: 20px;
+        }
+
+        .features li {
+            list-style: none;
+            padding-left: 25px;
+            margin-bottom: 8px;
+            position: relative;
+        }
+
+        .features li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            font-weight: bold;
+            color: #ff6f00;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📱 QR 코드 1-100</h1>
+        <p class="subtitle">금별맥주 야장 일괄 다운로드</p>
+
+        <div class="info-box">
+            <strong>ℹ️ 안내:</strong><br>
+            • Railway 도메인: https://qrsystem-production-8da8.up.railway.app/?table=번호<br>
+            • 100개 파일이 자동으로 생성됩니다<br>
+            • 압축 파일(ZIP)로 다운로드 가능합니다
+        </div>
+
+        <div class="features">
+            <strong>특징:</strong>
+            <ul>
+                <li>100개 QR 코드 자동 생성</li>
+                <li>파일명: QR_table_001.png ~ QR_table_100.png</li>
+                <li>ZIP 압축 파일로 한 번에 다운로드</li>
+                <li>내일 바로 프린트 가능!</li>
+            </ul>
+        </div>
+
+        <div class="status" id="status"></div>
+
+        <div class="progress-section" id="progressSection">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill">0%</div>
+            </div>
+            <div class="progress-text" id="progressText">0 / 100</div>
+        </div>
+
+        <div class="stats" id="stats" style="display:none;">
+            <div class="stat-item">
+                <div class="stat-value" id="statFiles">0</div>
+                <div class="stat-label">생성된 파일</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="statSize">0KB</div>
+                <div class="stat-label">총 크기</div>
+            </div>
+        </div>
+
+        <div class="file-list" id="fileList">
+            <h3>생성된 파일 목록:</h3>
+            <div id="fileListContent"></div>
+        </div>
+
+        <div class="button-group">
+            <button class="btn-primary" id="generateBtn" onclick="generateAndDownload()">
+                🚀 QR 코드 생성 및 다운로드
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const RAILWAY_URL = 'https://qrsystem-production-8da8.up.railway.app';
+        const qrCanvases = {};
+
+        async function generateAndDownload() {
+            const btn = document.getElementById('generateBtn');
+            const status = document.getElementById('status');
+            const progressSection = document.getElementById('progressSection');
+            const stats = document.getElementById('stats');
+            const fileList = document.getElementById('fileList');
+
+            btn.disabled = true;
+            status.innerHTML = '🔄 QR 코드 생성 중...';
+            status.className = 'status loading';
+            progressSection.style.display = 'block';
+            stats.style.display = 'grid';
+            fileList.style.display = 'block';
+
+            const qrCodes = [];
+
+            // 1. QR 코드 생성
+            for (let tableNum = 1; tableNum <= 100; tableNum++) {
+                await new Promise((resolve) => {
+                    setTimeout(() => {
+                        const url = `${RAILWAY_URL}/?table=${tableNum}`;
+                        
+                        // 임시 컨테이너 생성
+                        const tempContainer = document.createElement('div');
+                        tempContainer.id = `temp-qr-${tableNum}`;
+                        tempContainer.style.display = 'none';
+                        document.body.appendChild(tempContainer);
+
+                        // QR 코드 생성
+                        const qr = new QRCode(tempContainer, {
+                            text: url,
+                            width: 300,
+                            height: 300,
+                            colorDark: '#000000',
+                            colorLight: '#FFFFFF',
+                            correctLevel: QRCode.CorrectLevel.H
+                        });
+
+                        // Canvas 데이터 저장
+                        const canvas = tempContainer.querySelector('canvas');
+                        qrCodes.push({
+                            tableNum: tableNum,
+                            canvas: canvas,
+                            url: url
+                        });
+
+                        // 진행률 업데이트
+                        const percentage = Math.round((tableNum / 100) * 100);
+                        document.getElementById('progressFill').style.width = percentage + '%';
+                        document.getElementById('progressFill').textContent = percentage + '%';
+                        document.getElementById('progressText').textContent = `${tableNum} / 100`;
+
+                        document.getElementById('statFiles').textContent = tableNum;
+
+                        // 파일 목록 업데이트
+                        const fileListContent = document.getElementById('fileListContent');
+                        if (tableNum === 1) fileListContent.innerHTML = '';
+                        const fileItem = document.createElement('div');
+                        fileItem.className = 'file-item';
+                        fileItem.textContent = `QR_table_${String(tableNum).padStart(3, '0')}.png`;
+                        fileListContent.appendChild(fileItem);
+
+                        resolve();
+                    }, 0);
+                });
+            }
+
+            // 2. ZIP 파일 생성
+            status.innerHTML = '📦 ZIP 파일 생성 중...';
+            const zip = new JSZip();
+            const folder = zip.folder('QR_코드_1-100');
+
+            let totalSize = 0;
+
+            for (const qrCode of qrCodes) {
+                const dataUrl = qrCode.canvas.toDataURL('image/png');
+                const binaryString = atob(dataUrl.split(',')[1]);
+                const bytes = new Uint8Array(binaryString.length);
+                for (let i = 0; i < binaryString.length; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
+                }
+
+                const fileName = `QR_table_${String(qrCode.tableNum).padStart(3, '0')}.png`;
+                folder.file(fileName, bytes);
+                totalSize += bytes.length;
+            }
+
+            document.getElementById('statSize').textContent = (totalSize / 1024).toFixed(1) + 'KB';
+
+            // 3. ZIP 파일 다운로드
+            status.innerHTML = '💾 다운로드 준비 중...';
+            const blob = await zip.generateAsync({ type: 'blob' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'QR_코드_1-100.zip';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+
+            // 4. 완료
+            status.innerHTML = '✅ 다운로드 완료! 100개 QR 코드가 준비되었습니다!';
+            status.className = 'status success';
+
+            // 임시 요소 정리
+            for (let i = 1; i <= 100; i++) {
+                const tempDiv = document.getElementById(`temp-qr-${i}`);
+                if (tempDiv) tempDiv.remove();
+            }
+
+            btn.disabled = false;
+        }
+    </script>
+</body>
+</html>

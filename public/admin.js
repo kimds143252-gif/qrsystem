@@ -244,32 +244,17 @@ function formatPrice(price) {
 // 메뉴 렌더링
 function renderMenus() {
     const menusList = document.getElementById('menusList');
-    menusList.innerHTML = menus.map(menu => {
-        const badges = [];
-        if (menu.recommended) badges.push('⭐ 추천');
-        if (menu.popular) badges.push('🔥 인기');
-        if (menu.new) badges.push('✨ new');
-        if (menu.soldOut) badges.push('🚫 품절');
-        
-        const badgeHtml = badges.length > 0 ? `
-            <div style="display: flex; gap: 5px; margin-bottom: 8px; flex-wrap: wrap;">
-                ${badges.map(badge => `<span style="display: inline-block; background-color: #ff9800; color: white; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: bold;">${badge}</span>`).join('')}
+    menusList.innerHTML = menus.map(menu => `
+        <div class="menu-card" onclick="editMenu(${menu.id})">
+            ${menu.image ? `<img src="${menu.image}" alt="${menu.name}" class="menu-card-image">` : '<div class="menu-card-no-image">📷 이미지 없음</div>'}
+            <div class="menu-card-info">
+                <h4>${menu.name}</h4>
+                <p>${menu.category}</p>
+                <p class="menu-price">₩ ${formatPrice(menu.price)}</p>
+                <small>클릭하여 수정</small>
             </div>
-        ` : '';
-        
-        return `
-            <div class="menu-card" onclick="editMenu(${menu.id})" style="${menu.soldOut ? 'opacity: 0.6;' : ''}">
-                ${menu.image ? `<img src="${menu.image}" alt="${menu.name}" class="menu-card-image">` : '<div class="menu-card-no-image">📷 이미지 없음</div>'}
-                <div class="menu-card-info">
-                    ${badgeHtml}
-                    <h4>${menu.name}</h4>
-                    <p>${menu.category}</p>
-                    <p class="menu-price">₩ ${formatPrice(menu.price)}</p>
-                    <small>클릭하여 수정</small>
-                </div>
-            </div>
-        `;
-    }).join('');
+        </div>
+    `).join('');
 }
 
 // 메뉴 추가
@@ -289,11 +274,7 @@ async function addMenu() {
         price,
         category,
         image: null,
-        icon: '🍽️',
-        recommended: false,
-        popular: false,
-        new: false,
-        soldOut: false
+        icon: '🍽️'
     };
 
     menus.push(newMenu);
@@ -325,12 +306,6 @@ function editMenu(menuId) {
     document.getElementById('editMenuPrice').value = menu.price;
     document.getElementById('editMenuCategory').value = menu.category;
     document.getElementById('editMenuImage').value = '';
-    
-    // 메뉴 상태 체크박스 설정
-    document.getElementById('editMenuRecommended').checked = menu.recommended || false;
-    document.getElementById('editMenuPopular').checked = menu.popular || false;
-    document.getElementById('editMenuNew').checked = menu.new || false;
-    document.getElementById('editMenuSoldOut').checked = menu.soldOut || false;
     
     // 이미지 미리보기
     const preview = document.getElementById('imagePreview');
@@ -374,11 +349,7 @@ async function saveMenuEdit() {
         name,
         price,
         category,
-        image: currentEditingImage,
-        recommended: document.getElementById('editMenuRecommended').checked,
-        popular: document.getElementById('editMenuPopular').checked,
-        new: document.getElementById('editMenuNew').checked,
-        soldOut: document.getElementById('editMenuSoldOut').checked
+        image: currentEditingImage
     };
 
     try {
@@ -631,11 +602,12 @@ async function loadCustomerAccessUrl() {
         const response = await fetch('/api/access-info');
         if (!response.ok) throw new Error('접속 주소 조회 실패');
         const info = await response.json();
-        // 관리자 화면을 localhost로 열었더라도 QR에는 휴대폰이 접근 가능한 LAN IP를 사용합니다.
-        customerBaseUrl = info.lanUrl || info.browserOrigin;
+        // andone-order.com 도메인 우선 사용, 없으면 lanUrl 사용
+        customerBaseUrl = info.onlineUrl || info.lanUrl || info.browserOrigin;
     } catch (error) {
         console.error('고객 접속 주소 조회 실패:', error);
-        customerBaseUrl = window.location.origin;
+        // 기본값: andone-order.com
+        customerBaseUrl = 'https://andone-order.com';
     }
     return customerBaseUrl;
 }
