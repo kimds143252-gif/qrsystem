@@ -676,14 +676,60 @@ app.post('/api/orders', (req, res) => {
         console.log(`합계: ${total.toLocaleString()}원`);
         console.log('========================================\n');
 
-        // 프린터로 출력
-        printOrder(order);
+        // 🌐 개인 PC로 프린터 요청 전송 (비동기 - 응답 기다리지 않음)
+        const http = require('http');
+        const https = require('https');
+        
+        const remoteData = JSON.stringify({
+            orderId,
+            timestamp,
+            tableNumber,
+            items,
+            total
+        });
 
+        const options = {
+            hostname: '192.168.0.5',
+            port: 3000,
+            path: '/api/print-order',
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Content-Length': Buffer.byteLength(remoteData)
+            },
+            timeout: 5000 // 5초 타임아웃
+        };
+
+        const request = http.request(options, (response) => {
+            let data = '';
+            response.on('data', (chunk) => {
+                data += chunk;
+            });
+            response.on('end', () => {
+                console.log(`🖨️ 개인 PC 프린터 응답: ${response.statusCode}`);
+            });
+        });
+
+        request.on('error', (error) => {
+            console.log(`⚠️ 개인 PC로 전송 실패: ${error.message}`);
+            console.log(`💡 개인 PC가 켜져있고 npm start가 실행 중인지 확인하세요.`);
+        });
+
+        request.on('timeout', () => {
+            console.log(`⚠️ 개인 PC 연결 타임아웃 (5초)`);
+            request.destroy();
+        });
+
+        request.write(remoteData);
+        request.end();
+
+        // 클라이언트에 즉시 응답
         res.json({ 
             success: true, 
             orderId,
             message: '주문이 접수되었습니다!'
         });
+
     } catch (error) {
         console.error('주문 처리 오류:', error);
         res.status(500).json({ error: '주문 처리 중 오류가 발생했습니다' });
@@ -711,25 +757,33 @@ function printOrder(order) {
     
     const { exec } = require('child_process');
     
-    const tempFile = path.join(__dirname, `temp_${order.orderId}.txt`);
-    fs.writeFileSync(tempFile, printContent, 'utf-8');
+    // 주문 파일 저장
+    const ordersDir = path.join(__dirname, 'orders');
+    if (!fs.existsSync(ordersDir)) {
+        fs.mkdirSync(ordersDir, { recursive: true });
+    }
     
-    // SEWOO SLK-TS100 프린터로 직접 출력
-    const printCommand = `cmd /c "print /d:"SEWOO SLK-TS100" "${tempFile}""`;
+    // .txt 확장자를 명시적으로 추가
+    const printFile = path.join(ordersDir, `${order.orderId}_PRINT.txt`);
+    fs.writeFileSync(printFile, printContent, 'utf-8');
     
-    exec(printCommand, (error) => {
+    console.log(`📄 주문서 저장됨: ${printFile}`);
+    
+    // PowerShell로 출력 (확장자 .txt 명시)
+    // 경로에 백슬래시를 정방향 슬래시로 변환
+    const normalizedPath = printFile.replace(/\\/g, '/');
+    const printCommand = `powershell -Command "Get-Content '${normalizedPath}' -Encoding UTF8 | Out-Printer -Name 'SEWOO SLK-TS100'"`;
+    
+    console.log(`🖨️ 프린터 명령어 실행: ${printCommand}`);
+    
+    exec(printCommand, (error, stdout, stderr) => {
         if (error) {
             console.log(`⚠️ 프린터 출력 오류: ${error.message}`);
-            console.log(`💡 팁: SEWOO SLK-TS100이 Windows에 설치되어 있는지 확인하세요.`);
+            if (stderr) console.log(`오류 상세: ${stderr}`);
+            console.log(`💡 해결방법: 수동 인쇄 - ${printFile}`);
         } else {
             console.log(`✅ SEWOO SLK-TS100으로 출력 완료: ${order.orderId}`);
         }
-        
-        setTimeout(() => {
-            if (fs.existsSync(tempFile)) {
-                fs.unlinkSync(tempFile);
-            }
-        }, 2000);
     });
 }
 
@@ -755,9 +809,61 @@ function generatePrintContent(order) {
     return content;
 }
 
-// 라우트: 테스트 페이지
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+// 라우트: 원격 프린터 요청 (Railway에서 호출)
+app.post('/api/print-order', (req, res) => {
+    try {
+        const { tableNumber, items, total, orderId, timestamp } = req.body;
+
+        if (!tableNumber || !items || items.length === 0) {
+            return res.status(400).json({ error: '주문 정보가 없습니다' });
+        }
+
+        // 주문 데이터 생성
+        const order = {
+            orderId: orderId || `ORD-${Date.now()}`,
+            timestamp: timestamp || new Date().toLocaleString('ko-KR'),
+            tableNumber,
+            items,
+            total: total || 0,
+            status: 'received',
+            source: 'remote' // Railway에서 온 주문
+        };
+
+        console.log('\n========================================');
+        console.log('🌐 원격 주문 받음 (andone-order.com)');
+        console.log('========================================');
+        console.log(`주문번호: ${order.orderId}`);
+        console.log(`테이블: ${order.tableNumber}번`);
+        console.log(`시간: ${order.timestamp}`);
+        console.log('----------------------------------------');
+        items.forEach(item => {
+            console.log(`${item.name} × ${item.qty}`);
+        });
+        console.log('----------------------------------------');
+        console.log(`합계: ${total.toLocaleString()}원`);
+        console.log('========================================\n');
+
+        // 주문 파일로 저장
+        const ordersDir = path.join(__dirname, 'orders');
+        if (!fs.existsSync(ordersDir)) {
+            fs.mkdirSync(ordersDir, { recursive: true });
+        }
+        const filePath = path.join(ordersDir, `${order.orderId}.json`);
+        fs.writeFileSync(filePath, JSON.stringify(order, null, 2), 'utf-8');
+
+        // 프린터로 출력
+        printOrder(order);
+
+        res.json({ 
+            success: true, 
+            orderId: order.orderId,
+            message: '주문이 프린터로 출력되었습니다!'
+        });
+
+    } catch (error) {
+        console.error('원격 주문 처리 오류:', error);
+        res.status(500).json({ error: '주문 처리 중 오류가 발생했습니다' });
+    }
 });
 
 // 서버 시작
