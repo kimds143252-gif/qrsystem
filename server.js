@@ -790,21 +790,29 @@ function printOrder(order) {
 // 함수: 프린터 출력 내용 생성
 function generatePrintContent(order) {
     let content = '';
-    content += '================================\n';
-    content += '        금별맥주 야장 주문서\n';
-    content += '================================\n';
+    content += '====================================\n';
+    content += '\n';
+    content += '     금별맥주 야장 주문서\n';
+    content += '\n';
+    content += '====================================\n';
+    content += '\n';
     content += `테이블: ${order.tableNumber}번\n`;
     content += `시간: ${order.timestamp}\n`;
-    content += '--------------------------------\n';
+    content += '\n';
+    content += '====================================\n';
+    content += '\n';
 
     order.items.forEach(item => {
-        content += `${item.name} × ${item.qty}\n`;
-        content += `  ${(item.price * item.qty).toLocaleString()}원\n`;
+        content += `${item.name}\n`;
+        content += `수량: ${item.qty}개\n`;
+        content += '\n';
     });
 
-    content += '--------------------------------\n';
-    content += `합계: ${order.total.toLocaleString()}원\n`;
-    content += '================================\n';
+    content += '====================================\n';
+    content += '\n';
+    content += '   감사합니다! 🍺\n';
+    content += '\n';
+    content += '====================================\n';
 
     return content;
 }
