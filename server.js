@@ -714,13 +714,15 @@ function printOrder(order) {
     const tempFile = path.join(__dirname, `temp_${order.orderId}.txt`);
     fs.writeFileSync(tempFile, printContent, 'utf-8');
     
-    const printCommand = `notepad /p "${tempFile}"`;
+    // SEWOO SLK-TS100 프린터로 직접 출력
+    const printCommand = `cmd /c "print /d:"SEWOO SLK-TS100" "${tempFile}""`;
     
     exec(printCommand, (error) => {
         if (error) {
             console.log(`⚠️ 프린터 출력 오류: ${error.message}`);
+            console.log(`💡 팁: SEWOO SLK-TS100이 Windows에 설치되어 있는지 확인하세요.`);
         } else {
-            console.log(`✅ 프린터로 출력 완료: ${order.orderId}`);
+            console.log(`✅ SEWOO SLK-TS100으로 출력 완료: ${order.orderId}`);
         }
         
         setTimeout(() => {
