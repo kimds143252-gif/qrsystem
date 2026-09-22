@@ -791,8 +791,9 @@ function printOrder(order) {
 function generatePrintContent(order) {
     let content = '';
     
-    // ESC/POS 글자 크기 2배 확대 명령어
-    content += '\x1D\x21\x11'; // 글자 크기 2배 (가로 2배, 세로 2배)
+    // ESC/POS 글자 크기 2배 확대 + 왼쪽 정렬
+    content += '\x1D\x21\x11'; // 글자 크기 2배
+    content += '\x1B\x61\x00'; // 왼쪽 정렬
     
     content += '금별맥주 야장 주문서\n';
     content += '\n';
@@ -800,16 +801,17 @@ function generatePrintContent(order) {
     content += `시간: ${order.timestamp}\n`;
     content += '\n';
     
-    // 글자 크기 정상화
+    // 글자 크기 정상화 + 왼쪽 정렬 유지
     content += '\x1D\x21\x00';
     content += '\n';
 
     order.items.forEach(item => {
-        content += `${item.name}\n`;
-        content += `수량: ${item.qty}개\n`;
-        content += '\n';
+        // 메뉴명과 수량을 같은 줄에 배치 (양쪽 끝)
+        const padding = Math.max(0, 32 - item.name.length - item.qty.toString().length - 2);
+        content += `${item.name}${' '.repeat(padding)}${item.qty}개\n`;
     });
 
+    content += '\n';
     content += '감사합니다! 🍺\n';
 
     return content;
