@@ -689,7 +689,7 @@ app.post('/api/orders', (req, res) => {
         });
 
         const options = {
-            hostname: '192.168.0.5',
+            hostname: '192.168.0.4',
             port: 3000,
             path: '/api/print-order',
             method: 'POST',
@@ -790,16 +790,18 @@ function printOrder(order) {
 // 함수: 프린터 출력 내용 생성
 function generatePrintContent(order) {
     let content = '';
-    content += '====================================\n';
-    content += '\n';
-    content += '     금별맥주 야장 주문서\n';
-    content += '\n';
-    content += '====================================\n';
+    
+    // ESC/POS 글자 크기 2배 확대 명령어
+    content += '\x1D\x21\x11'; // 글자 크기 2배 (가로 2배, 세로 2배)
+    
+    content += '금별맥주 야장 주문서\n';
     content += '\n';
     content += `테이블: ${order.tableNumber}번\n`;
     content += `시간: ${order.timestamp}\n`;
     content += '\n';
-    content += '====================================\n';
+    
+    // 글자 크기 정상화
+    content += '\x1D\x21\x00';
     content += '\n';
 
     order.items.forEach(item => {
@@ -808,11 +810,7 @@ function generatePrintContent(order) {
         content += '\n';
     });
 
-    content += '====================================\n';
-    content += '\n';
-    content += '   감사합니다! 🍺\n';
-    content += '\n';
-    content += '====================================\n';
+    content += '감사합니다! 🍺\n';
 
     return content;
 }
@@ -878,6 +876,6 @@ app.post('/api/print-order', (req, res) => {
 app.listen(PORT, () => {
     console.log(`\n🚀 금별맥주 QR 주문 시스템 시작됨!`);
     console.log(`📱 고객 접속 주소: https://andone-order.com/?table=테이블번호`);
-    console.log(`\n또는 로컬 WiFi: http://192.168.0.5:${PORT}/?table=테이블번호`);
+    console.log(`\n또는 로컬 WiFi: http://192.168.0.4:${PORT}/?table=테이블번호`);
     console.log(`또는 로컬호스트: http://localhost:${PORT}/?table=테이블번호\n`);
 });
